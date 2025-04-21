@@ -13,7 +13,7 @@ export async function onRequest({ request, env }) {
 <body>
   <script>
     function onloadTurnstileCallback() {
-      turnstile.execute('${env.0x4AAAAAABM4ehiS0ZNJcU-Q}', {
+      turnstile.execute('${env.TURNSTILE_SITE_KEY}', {
         action: 'redirect',
         callback: function(token) {
           fetch('/verify', {
