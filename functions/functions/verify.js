@@ -1,21 +1,38 @@
 export async function onRequestPost({ request, env }) {
   try {
     const { token } = await request.json();
-    const verifyRes = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+
+    // Turnstile验证接口调用
+    const verifyUrl = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
+    const secretKey = env.TURNSTILE_SECRET;
+
+    const result = await fetch(verifyUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `secret=${env.TURNSTILE_SECRET}&response=${token}`
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        secret: secretKey,
+        response: token
+      })
     });
 
-    const { success } = await verifyRes.json();
-    if (success) {
-      const headers = new Headers();
-      headers.append('Set-Cookie', 'cf-verified=true; Path=/; Max-Age=3600');
-      headers.append('Location', env.TARGET_URL);
-      return new Response(null, { status: 302, headers });
+    const data = await result.json();
+
+    if (data.success) {
+      return new Response(JSON.stringify({ success: true }), {
+        headers: {
+          'Set-Cookie': 'cf-verified=true; Path=/; HttpOnly; Secure',
+          'Content-Type': 'application/json'
+        }
+      });
     }
-    return new Response('验证失败', { status: 403 });
+
+    return new Response(JSON.stringify({ error: 'Invalid token' }), { 
+      status: 403 
+    });
+
   } catch (error) {
-    return new Response('服务器错误', { status: 500 });
+    return new Response(JSON.stringify({ error: 'Internal Server Error' }), {
+      status: 500
+    });
   }
 }
