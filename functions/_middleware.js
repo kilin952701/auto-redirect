@@ -8,7 +8,7 @@ export async function onRequest({ request, env }) {
 
   const htmlContent = `
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh">
 <head>
   <!-- 手动添加错误处理 -->
   <script>
